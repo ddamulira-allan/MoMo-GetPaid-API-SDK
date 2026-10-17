@@ -146,19 +146,26 @@ export class MoMoClient {
   private static readonly TOKEN_BUFFER_MS = 60_000;
 
   constructor(config: MoMoClientConfig) {
-    if (!config.baseUrl)                       throw new Error('[MoMo] config.baseUrl is required');
-    if (!config.apiUser)                       throw new Error('[MoMo] config.apiUser is required');
-    if (!config.apiKey)                        throw new Error('[MoMo] config.apiKey is required');
-    if (!config.subscriptionKey)               throw new Error('[MoMo] config.subscriptionKey is required');
-    if (!config.disbursementSubscriptionKey)   throw new Error('[MoMo] config.disbursementSubscriptionKey is required');
-    if (!config.targetEnvironment)             throw new Error('[MoMo] config.targetEnvironment is required');
+    const baseUrl = typeof config?.baseUrl === 'string' ? config.baseUrl.trim() : '';
+    const apiUser = typeof config?.apiUser === 'string' ? config.apiUser.trim() : '';
+    const apiKey = typeof config?.apiKey === 'string' ? config.apiKey.trim() : '';
+    const subscriptionKey = typeof config?.subscriptionKey === 'string' ? config.subscriptionKey.trim() : '';
+    const disbursementSubscriptionKey = typeof config?.disbursementSubscriptionKey === 'string' ? config.disbursementSubscriptionKey.trim() : '';
+    const targetEnvironment = typeof config?.targetEnvironment === 'string' ? config.targetEnvironment.trim() : '';
 
-    this.baseUrl                     = config.baseUrl.replace(/\/$/, '');
-    this.apiUser                     = config.apiUser;
-    this.apiKey                      = config.apiKey;
-    this.subscriptionKey             = config.subscriptionKey;
-    this.disbursementSubscriptionKey = config.disbursementSubscriptionKey;
-    this.targetEnvironment           = config.targetEnvironment;
+    if (!baseUrl)                       throw new Error('[MoMo] config.baseUrl is required');
+    if (!apiUser)                       throw new Error('[MoMo] config.apiUser is required');
+    if (!apiKey)                        throw new Error('[MoMo] config.apiKey is required');
+    if (!subscriptionKey)               throw new Error('[MoMo] config.subscriptionKey is required');
+    if (!disbursementSubscriptionKey)   throw new Error('[MoMo] config.disbursementSubscriptionKey is required');
+    if (!targetEnvironment)             throw new Error('[MoMo] config.targetEnvironment is required');
+
+    this.baseUrl                     = baseUrl.replace(/\/$/, '');
+    this.apiUser                     = apiUser;
+    this.apiKey                      = apiKey;
+    this.subscriptionKey             = subscriptionKey;
+    this.disbursementSubscriptionKey = disbursementSubscriptionKey;
+    this.targetEnvironment           = targetEnvironment;
   }
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -233,11 +240,12 @@ export class MoMoClient {
    * @returns `{ result: true }` if active, `{ result: false }` otherwise.
    */
   async checkAccount(msisdn: string): Promise<CheckAccountResponse> {
-    if (!msisdn) throw new MoMoError('[MoMo] checkAccount: msisdn is required');
+    const normalizedMsisdn = typeof msisdn === 'string' ? msisdn.trim() : '';
+    if (!normalizedMsisdn) throw new MoMoError('[MoMo] checkAccount: msisdn is required');
     const token = await this.getAccessToken();
 
     const data = await apiFetch<CheckAccountResponse>(
-      `${this.baseUrl}/disbursement/v1_0/accountholder/msisdn/${encodeURIComponent(msisdn)}/active`,
+      `${this.baseUrl}/disbursement/v1_0/accountholder/msisdn/${encodeURIComponent(normalizedMsisdn)}/active`,
       {
         method: 'GET',
         headers: {
@@ -266,11 +274,12 @@ export class MoMoClient {
    * @returns User info including `given_name`, `family_name`, `gender`, etc.
    */
   async checkNames(msisdn: string): Promise<BasicUserInfo> {
-    if (!msisdn) throw new MoMoError('[MoMo] checkNames: msisdn is required');
+    const normalizedMsisdn = typeof msisdn === 'string' ? msisdn.trim() : '';
+    if (!normalizedMsisdn) throw new MoMoError('[MoMo] checkNames: msisdn is required');
     const token = await this.getAccessToken();
 
     const data = await apiFetch<BasicUserInfo>(
-      `${this.baseUrl}/disbursement/v1_0/accountholder/msisdn/${encodeURIComponent(msisdn)}/basicuserinfo`,
+      `${this.baseUrl}/disbursement/v1_0/accountholder/msisdn/${encodeURIComponent(normalizedMsisdn)}/basicuserinfo`,
       {
         method: 'GET',
         headers: {
@@ -302,14 +311,24 @@ export class MoMoClient {
    * @returns `{ requestId }` — the UUID used as `X-Reference-Id`.
    */
   async requestToPay(params: RequestToPayParams): Promise<RequestToPayResult> {
-    const { amount, currency, externalId, payer, payerMessage, payeeNote, callbackUrl } = params;
+    if (!params || typeof params !== 'object') {
+      throw new MoMoError('[MoMo] requestToPay: params are required');
+    }
+
+    const amount = typeof params.amount === 'string' ? params.amount.trim() : String(params.amount ?? '').trim();
+    const currency = typeof params.currency === 'string' ? params.currency.trim() : String(params.currency ?? '').trim();
+    const externalId = typeof params.externalId === 'string' ? params.externalId.trim() : String(params.externalId ?? '').trim();
+    const payer = params.payer;
+    const payerMessage = typeof params.payerMessage === 'string' ? params.payerMessage.trim() : '';
+    const payeeNote = typeof params.payeeNote === 'string' ? params.payeeNote.trim() : '';
+    const callbackUrl = typeof params.callbackUrl === 'string' ? params.callbackUrl.trim() : '';
 
     if (!amount || !currency || !externalId || !payer) {
       throw new MoMoError('[MoMo] requestToPay: amount, currency, externalId, and payer are required');
     }
 
     const token = await this.getAccessToken();
-    const requestId = params.requestId ?? randomUUID();
+    const requestId = typeof params.requestId === 'string' && params.requestId.trim() ? params.requestId.trim() : randomUUID();
 
     const headers: Record<string, string> = {
       'Authorization': `Bearer ${token}`,
@@ -347,11 +366,12 @@ export class MoMoClient {
    *          `"SUCCESSFUL"`, or `"FAILED"`.
    */
   async getRequestToPayStatus(requestId: string): Promise<RequestToPayStatus> {
-    if (!requestId) throw new MoMoError('[MoMo] getRequestToPayStatus: requestId is required');
+    const normalizedRequestId = typeof requestId === 'string' ? requestId.trim() : '';
+    if (!normalizedRequestId) throw new MoMoError('[MoMo] getRequestToPayStatus: requestId is required');
     const token = await this.getAccessToken();
 
     const data = await apiFetch<RequestToPayStatus>(
-      `${this.baseUrl}/collection/v1_0/requesttopay/${encodeURIComponent(requestId)}`,
+      `${this.baseUrl}/collection/v1_0/requesttopay/${encodeURIComponent(normalizedRequestId)}`,
       {
         method: 'GET',
         headers: {
@@ -380,7 +400,12 @@ export class MoMoClient {
    * @param params.notificationMessage - Message to deliver. Max 160 characters.
    */
   async sendDeliveryNotification(params: DeliveryNotificationParams): Promise<void> {
-    const { requestId, notificationMessage } = params;
+    if (!params || typeof params !== 'object') {
+      throw new MoMoError('[MoMo] sendDeliveryNotification: params are required');
+    }
+
+    const requestId = typeof params.requestId === 'string' ? params.requestId.trim() : '';
+    const notificationMessage = typeof params.notificationMessage === 'string' ? params.notificationMessage.trim() : '';
 
     if (!requestId) throw new MoMoError('[MoMo] sendDeliveryNotification: requestId is required');
     if (!notificationMessage) throw new MoMoError('[MoMo] sendDeliveryNotification: notificationMessage is required');
@@ -423,17 +448,24 @@ export class MoMoClient {
    * @returns `{ requestIdRefund }` — the UUID used as `X-Reference-Id`.
    */
   async refund(params: RefundParams): Promise<RefundResult> {
-    const {
-      amount, currency, externalId, payerMessage, payeeNote,
-      referenceIdToRefund, callbackUrl,
-    } = params;
+    if (!params || typeof params !== 'object') {
+      throw new MoMoError('[MoMo] refund: params are required');
+    }
+
+    const amount = typeof params.amount === 'string' ? params.amount.trim() : String(params.amount ?? '').trim();
+    const currency = typeof params.currency === 'string' ? params.currency.trim() : String(params.currency ?? '').trim();
+    const externalId = typeof params.externalId === 'string' ? params.externalId.trim() : String(params.externalId ?? '').trim();
+    const payerMessage = typeof params.payerMessage === 'string' ? params.payerMessage.trim() : '';
+    const payeeNote = typeof params.payeeNote === 'string' ? params.payeeNote.trim() : '';
+    const referenceIdToRefund = typeof params.referenceIdToRefund === 'string' ? params.referenceIdToRefund.trim() : '';
+    const callbackUrl = typeof params.callbackUrl === 'string' ? params.callbackUrl.trim() : '';
 
     if (!amount || !currency || !externalId || !referenceIdToRefund) {
       throw new MoMoError('[MoMo] refund: amount, currency, externalId, and referenceIdToRefund are required');
     }
 
     const token = await this.getAccessToken();
-    const requestIdRefund = params.requestId ?? randomUUID();
+    const requestIdRefund = typeof params.requestId === 'string' && params.requestId.trim() ? params.requestId.trim() : randomUUID();
 
     const headers: Record<string, string> = {
       'Authorization': `Bearer ${token}`,
@@ -471,11 +503,12 @@ export class MoMoClient {
    *          `"SUCCESSFUL"`, or `"FAILED"`.
    */
   async getRefundStatus(requestIdRefund: string): Promise<RefundStatus> {
-    if (!requestIdRefund) throw new MoMoError('[MoMo] getRefundStatus: requestIdRefund is required');
+    const normalizedRequestIdRefund = typeof requestIdRefund === 'string' ? requestIdRefund.trim() : '';
+    if (!normalizedRequestIdRefund) throw new MoMoError('[MoMo] getRefundStatus: requestIdRefund is required');
     const token = await this.getAccessToken();
 
     const data = await apiFetch<RefundStatus>(
-      `${this.baseUrl}/disbursement/v1_0/refund/${encodeURIComponent(requestIdRefund)}`,
+      `${this.baseUrl}/disbursement/v1_0/refund/${encodeURIComponent(normalizedRequestIdRefund)}`,
       {
         method: 'GET',
         headers: {

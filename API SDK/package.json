@@ -30,6 +30,7 @@
     "build:cjs": "tsc -p tsconfig.build.json --outDir dist/cjs --module CommonJS --moduleResolution Node10 && node scripts/rename-cjs.mjs",
     "build": "npm run clean && npm run build:esm && npm run build:cjs",
     "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test",
     "start:shop": "node ecommerce/server.mjs",
     "prepublishOnly": "npm run typecheck && npm run build"
   },
