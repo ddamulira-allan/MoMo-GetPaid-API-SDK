@@ -49,6 +49,16 @@ test('validates required configuration and removes a trailing base URL slash', (
   assert.equal(client.baseUrl, 'https://sandbox.momodeveloper.mtn.com');
 });
 
+test('treats blank config values and missing params as invalid input', async () => {
+  assert.throws(() => new MoMoClient({ ...config, baseUrl: '   ' }), {
+    message: '[MoMo] config.baseUrl is required',
+  });
+
+  const client = new MoMoClient(config);
+  await assert.rejects(client.requestToPay(undefined), MoMoError);
+  await assert.rejects(client.sendDeliveryNotification(undefined), MoMoError);
+});
+
 test('requestToPay authenticates, sends the payment, and reuses its cached token', async (t) => {
   const calls = [];
   installFetch(t, async (url, options) => {
