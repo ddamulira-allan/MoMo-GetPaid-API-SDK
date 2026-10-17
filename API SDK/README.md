@@ -17,6 +17,19 @@ npm run build
 
 ---
 
+## Tests
+
+Run the automated test suite with:
+
+```bash
+npm test
+```
+
+The tests use Node.js's built-in test runner and mocked HTTP responses; they do
+not require MoMo credentials or make network requests.
+
+---
+
 ## Quick Start
 
 ```ts
