@@ -132,6 +132,8 @@ The SDK package also contains a detailed package-level README in [API SDK/README
 
 The Postman collection under [API SDK/postman](API%20SDK/postman) can be used as a reference for the underlying MTN MoMo Get Paid endpoints.
 
+The [GitHub Pages documentation source](docs/index.md) provides a concise project overview and quick start.
+
 ---
 
 ## Notes
@@ -139,5 +141,4 @@ The Postman collection under [API SDK/postman](API%20SDK/postman) can be used as
 - This project is for MTN MoMo Get Paid API integration.
 - Use sandbox credentials for testing before moving to production.
 - Follow the official MoMo developer documentation for live environment setup and security requirements.
-
 
