@@ -21,7 +21,7 @@ const deliveryFee = 5000;
 const freeDeliveryThreshold = 200000;
 
 function loadDotEnv() {
-  const envPath = resolve(projectRoot, '.env');
+  const envPath = resolve(projectRoot, '..', '.env');
   return readFile(envPath, 'utf8')
     .then((contents) => {
       for (const rawLine of contents.split(/\r?\n/)) {
