@@ -1,0 +1,28 @@
+{
+  "name": "MoMo GetPaid SDK",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bookworm",
+  "containerEnv": {
+    "NODE_ENV": "development"
+  },
+  "postCreateCommand": "npm install && npm run build",
+  "postStartCommand": "/bin/bash .devcontainer/codespace-startup.sh",
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": {
+      "label": "MoMo demo storefront",
+      "onAutoForward": "notify"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-next"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}
